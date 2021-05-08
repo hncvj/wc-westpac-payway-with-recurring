@@ -47,6 +47,10 @@ This plugin extends WooCommerce and provides a secure Iframe based checkout meth
 4. Set value for "Total Number of Payments" you want to take. Like you want Subscription for 3 Months or 3 weeks then you'll enter 3 there.
 5. Select "Frequency of Payments" Supported by Payway like Weekly, Fortnightly, Monthly, Quarterly, Six Monthly and Yearly.
 
+== Contribute ==
+
+You can contribute to this project on Github here: https://github.com/hncvj/woo-westpac-payway-payment-gateway-recurring
+
 == Donation ==
 
 If you liked my work and if this plugin fulfilled your needs, please donate via below link.
