@@ -1,7 +1,6 @@
 <?php
 /*
- * Plugin Name: Westpac PayWay NET Payment Gateway for WooCommerce (Recurring)
- * Plugin URI: https://www.upwork.com/fl/hncvj
+ * Plugin Name: Westpac PayWay NET Payment Gateway for Woo with Recurring Billing
  * Description: The plugin gives the functionality of processing Credit and Debit Cards on WooCommerce using Westpac PayWay NET along with Recurring Payments.
  * Version: 1.0
  * Author: Spanrig Technologies

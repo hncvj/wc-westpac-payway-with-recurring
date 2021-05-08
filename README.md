@@ -1,4 +1,4 @@
-# Westpac PayWay NET Payment Gateway for WooCommerce (Recurring)
+# Westpac PayWay NET Payment Gateway for Woo with Recurring Billing
 
 This plugin extends WooCommerce and provides a secure Iframe based checkout method for Westpac PayWay. The Iframe uses PayWay REST API and no credit card data is stored on your server. This means there is no need of PCI-DSS compliance so costs are reduced. This plugin works with AUD currency as well and support Recurring Payments.
 
