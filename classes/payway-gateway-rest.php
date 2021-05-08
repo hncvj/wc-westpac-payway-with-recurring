@@ -196,11 +196,13 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 
 			$is_payway_sub = 'no';
 			$payway_frequency = 'monthly';
+			$no_of_payments = '3';
 
 			// Get and Loop Over Order Items
 			foreach ( $order->get_items() as $item_id => $item ) {
-			   $is_payway_sub = get_post_meta( $item->get_product_id(), '_is_payway_subscription',true );
-			   $payway_frequency = get_post_meta( $item->get_product_id(), '_payway_frequency',true );
+			  	$is_payway_sub = get_post_meta( $item->get_product_id(), '_is_payway_subscription',true );
+			  	$payway_frequency = get_post_meta( $item->get_product_id(), '_payway_frequency',true );
+				$no_of_payments = get_post_meta( $item->get_product_id(), '_no_of_payments',true );	
 			}
 			
 			//Checking order total...
@@ -243,6 +245,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 					'frequency' => $payway_frequency,
 					'regularPrincipalAmount' => $amount,
 					'nextPaymentDate' => $nextPaymentDate,
+					'numberOfPaymentsRemaining' => $no_of_payments - 1,
 					'emailAddress' => $order -> get_billing_email(),
 					'sendEmailReceipts' => $this->automatic_email_receipts,
 					'postalCode' => $order -> get_billing_postcode());

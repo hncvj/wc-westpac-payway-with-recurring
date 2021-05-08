@@ -86,6 +86,19 @@ function woocommerce_payway_gateway_rest_recurring_init()
 			)
 		);
 		
+  
+		woocommerce_wp_text_input( array(
+			'id' => '_no_of_payments',
+			'label' => __( 'Total Number of Payments', 'textdomain' ),
+			'desc_tip' => true,
+			'description'   => __( 'Total number of payments to be taken from customer including 1st payment.', 'woocommerce' ),
+			'type' => 'number',
+			'custom_attributes' => array(
+				'step' => '1',
+				'min' => '0'
+			)) 
+		);
+		
 		woocommerce_wp_select( array(
 			'id' => '_payway_frequency',
 			'label' => __( 'Select Frequency of Payments', 'woocommerce' ),
@@ -106,15 +119,22 @@ function woocommerce_payway_gateway_rest_recurring_init()
 	function payway_custom_fields_save( $post_id ){
 
 		//Save is Subscription
-		$woocommerce_checkbox = isset( $_POST['_is_payway_subscription'] ) ? 'yes' : 'no';
-		update_post_meta( $post_id, '_is_payway_subscription', $woocommerce_checkbox );
+		$is_payway_subscription = isset( $_POST['_is_payway_subscription'] ) ? 'yes' : 'no';
+		update_post_meta( $post_id, '_is_payway_subscription', $is_payway_subscription );
 		
+		//Save No of Payments
+		$no_of_payments = $_POST['_no_of_payments'];
+		if (!empty($no_of_payments)){
+			update_post_meta($post_id, '_no_of_payments', esc_attr($no_of_payments));
+		}else{
+			update_post_meta($post_id, '_no_of_payments', '3');
+		}
 		//Save Frequency
 		$frequency  = $_POST['_payway_frequency'];
 		if( !empty( $frequency ) )
 		  update_post_meta( $post_id, '_payway_frequency', esc_attr( $frequency ) );
 		else {
-		  update_post_meta( $post_id, '_payway_frequency',  '' );
+		  update_post_meta( $post_id, '_payway_frequency',  'monthly' );
 		}
 	}
 	add_action( 'woocommerce_process_product_meta', 'payway_custom_fields_save' );
