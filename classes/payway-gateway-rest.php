@@ -181,8 +181,8 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 	**/
 	public function push_payway_recurring_rest_callback()
 	{
-		$singleUseTokenId 	= $_REQUEST['singleUseTokenId'];
-		$order_id 			= $_REQUEST['order_id'];
+		$singleUseTokenId 	= sanitize_text_field($_REQUEST['singleUseTokenId']);
+		$order_id 			= sanitize_text_field($_REQUEST['order_id']);
 		$merchantId 		= sanitize_text_field($this->settings['customer-merchant']);
 		$secret_key			= sanitize_text_field($this->settings['secret_key']);
 
@@ -192,7 +192,7 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 		{
 			  
 			$order = new WC_Order($order_id);
-			$amount = $_REQUEST['amount'];
+			$amount = sanitize_text_field($_REQUEST['amount']);
 
 			$is_payway_sub = 'no';
 			$payway_frequency = 'monthly';
@@ -208,12 +208,10 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 			//Checking order total...
 			if ($amount == $order->get_total())
 			{
-
+				//Add Subscription details against customer and store the card.
 				if($is_payway_sub == 'yes'){
 
 					$customer_url = 'https://api.payway.com.au/rest/v1/customers/'.$order->get_user_id();
-
-					$custcurl = curl_init($customer_url);
 					
 					switch ($payway_frequency) {
 						case "weekly":
@@ -240,78 +238,83 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 					
 					
 					$custcurl_post_data = array(
-					'singleUseTokenId' => $singleUseTokenId,
-					'merchantId' => $merchantId,
-					'frequency' => $payway_frequency,
-					'regularPrincipalAmount' => $amount,
-					'nextPaymentDate' => $nextPaymentDate,
-					'numberOfPaymentsRemaining' => $no_of_payments - 1,
-					'emailAddress' => $order -> get_billing_email(),
-					'sendEmailReceipts' => $this->automatic_email_receipts,
-					'postalCode' => $order -> get_billing_postcode());
+						'singleUseTokenId' => $singleUseTokenId,
+						'merchantId' => $merchantId,
+						'frequency' => $payway_frequency,
+						'regularPrincipalAmount' => $amount,
+						'nextPaymentDate' => $nextPaymentDate,
+						'numberOfPaymentsRemaining' => $no_of_payments - 1,
+						'emailAddress' => $order -> get_billing_email(),
+						'sendEmailReceipts' => $this->automatic_email_receipts,
+						'postalCode' => $order -> get_billing_postcode()
+					);
 					
-					$this->log('Curl Customer: ' . json_encode($custcurl_post_data));
+					$this->log('Customer Details Sent: ' . json_encode($custcurl_post_data));
 
-					curl_setopt($custcurl, CURLOPT_RETURNTRANSFER, true);
-					curl_setopt($custcurl, CURLOPT_CUSTOMREQUEST, "PUT");
-					curl_setopt($custcurl, CURLOPT_USERNAME, $secret_key);
-					curl_setopt($custcurl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-					curl_setopt($custcurl, CURLOPT_RETURNTRANSFER, 1);
-					curl_setopt($custcurl, CURLOPT_POSTFIELDS, $custcurl_post_data);
+					$customer_args = array(
+						'headers' => array(
+						    'Authorization' => 'Basic ' . base64_encode( $secret_key)
+						),
+						'method' => 'PUT',
+						'sslverify' => false,
+						'body' => $custcurl_post_data
 
-					$curl_response = curl_exec($custcurl);
-					$this->log('Curl Customer Response: ' . $curl_response);
-					if ($curl_response === false) {
-						$info = curl_getinfo($custcurl);
-						curl_close($custcurl);
-						die('Error occured during curl exec. Additioanl info: ' . var_export($info));
-					}
-					else
-					{
+					);
+					$response = wp_remote_request( $customer_url,$customer_args);
+
+					$this->log('Customer Response: ' . json_encode($curl_response));
+
+					
+					if (wp_remote_retrieve_response_code($response) != 200) {
+						wc_add_notice(__('Something Went Wrong. Please try again.'));
+						wp_redirect ( $order->get_cancel_order_url());	
+
+					} else {
+
 						$order -> add_order_note('Customer Added to Payway with Payment Frequency '.$payway_frequency.' and Regular Principal Amount of '.$amount);
 					}
 
 				}
 				
-				
-
-				//$status = $_REQUEST['status'];
-
+				//Proceed to transact with the customer
 				$productinfo = "Order $order_id";
 			
 				$service_url = 'https://api.payway.com.au/rest/v1/transactions';
 			
-				$curl = curl_init($service_url);
 				$curl_post_data = array(
-				'customerNumber' => $order->get_user_id(),
-				'transactionType' => 'payment',
-				'principalAmount' => $amount,
-				'currency' =>	'aud',
-				'orderNumber' => $order_id,
-				'merchantId' => $merchantId);
+					'customerNumber' => $order->get_user_id(),
+					'transactionType' => 'payment',
+					'principalAmount' => $amount,
+					'currency' =>	'aud',
+					'orderNumber' => $order_id,
+					'merchantId' => $merchantId
+				);
 				
 				//Add SingleUseToken Only if Subscription product is not there.
 				if($is_payway_sub == 'no' || $is_payway_sub == '' || empty($is_payway_sub)){$curl_post_data['singleUseTokenId'] = $singleUseTokenId;}
 				
-				$this->log('Curl Transaction: ' . json_encode($curl_post_data));
-					
-				curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-				curl_setopt($curl, CURLOPT_POST, true);
-				curl_setopt($curl, CURLOPT_USERNAME, $secret_key);
-				curl_setopt($curl, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-				curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
-				
-				curl_setopt($curl, CURLOPT_POSTFIELDS, $curl_post_data);
-				$curl_response = curl_exec($curl);
-				$this->log('Curl Transaction Response: ' . $curl_response);
-				if ($curl_response === false) {
-					$info = curl_getinfo($curl);
-					curl_close($curl);
-					die('Error occured during curl exec. Additioanl info: ' . var_export($info));
-				}
-				else
+				$this->log('Transaction Details Sent: ' . json_encode($curl_post_data));
+
+				$service_args = array(
+					'headers' => array(
+					    'Authorization' => 'Basic ' . base64_encode( $secret_key)
+					),
+					'sslverify' => false,
+					'body' => $curl_post_data
+
+				);
+				$response = wp_remote_post( $service_url,$service_args);
+
+				$this->log('Transaction Response: ' . json_encode($response));
+
+				$response_body = wp_remote_retrieve_body($response);
+				if (wp_remote_retrieve_response_code($response) != 200 && wp_remote_retrieve_response_code($response) != 201) {
+						wc_add_notice(__('Something Went Wrong. Please try again.'));
+					wp_redirect ( $order->get_cancel_order_url());	
+
+				}else
 				{
-					$json = json_decode($curl_response,true);
+					$json = json_decode($response_body,true);
 					if ($json['status'] == 'approved')
 					{
 							$order -> payment_complete();
@@ -322,13 +325,9 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 					else
 					{
 						$order -> add_order_note('The transaction has been declined. Transaction Id : '. $json['transactionId'].'. Response Code: '.$json['responseCode'].' Resonse Text : '.$json['responseText']);
-						
-						//if (function_exists('wc_add_notice'))
-						//{
+
 						wc_add_notice(__('The transaction has been declined. Transaction Id : '. $json['transactionId'].'. Response Code: '.$json['responseCode'].' Resonse Text : '.$json['responseText'].'. Please try again.'));
-						
-						//}
-						//else */
+
 						wp_redirect ( $order->get_cancel_order_url());	
 					}	
 				}

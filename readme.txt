@@ -1,10 +1,10 @@
-=== Westpac PayWay NET Payment Gateway for Woo with Recurring Billing ===
+=== Payment gateway for Westpac PayWay NET on Woocommerce with Recurring Billing ===
 Contributors: hncvj
 Donate link: https://rzp.io/l/hncvj
 Tags: woocommerce, payment, gateway
 Requires at least: 4.9
 Tested up to: 5.7.1
-Stable tag: 2.1
+Stable tag: 1.0
 Requires PHP: 5.6
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -56,3 +56,10 @@ You can contribute to this project on Github here: https://github.com/hncvj/woo-
 If you liked my work and if this plugin fulfilled your needs, please donate via below link.
 
 https://rzp.io/l/hncvj
+
+
+== Screenshots ==
+
+1. Westpac Payway Recurring Payment Gateway Under Woocommerce Payments Settings
+2. Configure Westpac Payway by Clicking Manage
+3. Configure Product to Accept Recurring Billing
