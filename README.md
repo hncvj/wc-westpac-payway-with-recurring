@@ -2,6 +2,9 @@
 
 This plugin extends WooCommerce and provides a secure Iframe based checkout method for Westpac PayWay. The Iframe uses PayWay REST API and no credit card data is stored on your server. This means there is no need of PCI-DSS compliance so costs are reduced. This plugin works with AUD currency as well and support Recurring Payments.
 
+Download Latest version from Wordpress Plugins Repository here: https://wordpress.org/plugins/wc-westpac-payway-with-recurring/
+
+
 ## Features
 - Westpac Payway Trusted Frame Based
 - Recurring Billing Supported
