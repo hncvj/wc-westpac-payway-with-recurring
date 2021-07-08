@@ -114,7 +114,9 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 	
 		public function wc_payway_receipt_page($order)
 		{
+			do_action('before_payway_form');
 			echo $this -> generate_PayWay_recurring_form($order);
+            do_action('after_payway_form');
 		}
 	
 		function generate_PayWay_recurring_form($order_id)
@@ -262,9 +264,8 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 					);
 					$response = wp_remote_request( $customer_url,$customer_args);
 
-					$this->log('Customer Response: ' . json_encode($curl_response));
-
-					
+					$this->log('Customer Response: ' . json_encode($response));
+                
 					if (wp_remote_retrieve_response_code($response) != 200) {
 						wc_add_notice(__('Something Went Wrong. Please try again.'));
 						wp_redirect ( $order->get_cancel_order_url());	
@@ -294,27 +295,28 @@ if ( ! defined( 'ABSPATH' ) ) exit; // Exit if accessed directly
 				if($is_payway_sub == 'no' || $is_payway_sub == '' || empty($is_payway_sub)){$curl_post_data['singleUseTokenId'] = $singleUseTokenId;}
 				
 				$this->log('Transaction Details Sent: ' . json_encode($curl_post_data));
-
 				$service_args = array(
 					'headers' => array(
 					    'Authorization' => 'Basic ' . base64_encode( $secret_key)
 					),
+                    'method'     => 'POST',
+                    'timeout' => 30,
 					'sslverify' => false,
 					'body' => $curl_post_data
 
 				);
-				$response = wp_remote_post( $service_url,$service_args);
+				$response = wp_remote_request( $service_url,$service_args);
 
 				$this->log('Transaction Response: ' . json_encode($response));
 
-				$response_body = wp_remote_retrieve_body($response);
-				if (wp_remote_retrieve_response_code($response) != 200 && wp_remote_retrieve_response_code($response) != 201) {
+				if (wp_remote_retrieve_response_code($response) !== 200 && wp_remote_retrieve_response_code($response) !== 201) {
 						wc_add_notice(__('Something Went Wrong. Please try again.'));
 					wp_redirect ( $order->get_cancel_order_url());	
 
 				}else
 				{
-					$json = json_decode($response_body,true);
+                	$body = wp_remote_retrieve_body($response);
+					$json = json_decode($body,true);
 					if ($json['status'] == 'approved')
 					{
 							$order -> payment_complete();
